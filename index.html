@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditoría IA | Calculadora de Ahorro y Automatización 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col justify-between">
+    <main class="max-w-3xl mx-auto px-6 py-12">
+        <div class="text-center mb-10">
+            <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">Herramienta Gratuita de Diagnóstico</span>
+            <h1 class="text-3xl md:text-5xl font-extrabold mt-4 bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">¿Cuánto dinero pierdes al año por no automatizar?</h1>
+            <p class="text-slate-400 mt-3 text-lg">Calcula tu fuga económica exacta en 15 segundos y obtén el stack de herramientas para recuperar ese tiempo hoy.</p>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 md:p-8 shadow-2xl">
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Horas semanales en tareas repetitivas (facturas, emails, Excel, redes)</label>
+                    <input type="number" id="hours" value="8" min="1" max="80" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Valor aproximado de tu hora de trabajo (€/h)</label>
+                    <input type="number" id="rate" value="25" min="5" max="500" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-emerald-500">
+                </div>
+            </div>
+
+            <button onclick="calculateROI()" class="w-full mt-6 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-4 rounded-xl transition cursor-pointer text-lg">
+                Calcular Fuga de Dinero y Ver Solución
+            </button>
+
+            <div id="results" class="hidden mt-8 pt-8 border-t border-slate-800">
+                <div class="grid grid-cols-2 gap-4 text-center mb-8">
+                    <div class="bg-red-500/10 border border-red-500/20 p-4 rounded-xl">
+                        <p class="text-xs text-red-300 uppercase">Coste Anual Perdido</p>
+                        <p id="lostMoney" class="text-2xl md:text-4xl font-black text-red-400 mt-1">0 €</p>
+                    </div>
+                    <div class="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl">
+                        <p class="text-xs text-emerald-300 uppercase">Tiempo Recuperable (85%)</p>
+                        <p id="savedHours" class="text-2xl md:text-4xl font-black text-emerald-400 mt-1">0 h/año</p>
+                    </div>
+                </div>
+
+                <h3 class="text-xl font-bold mb-4 text-white">Plan de Automatización Recomendado:</h3>
+                <div class="space-y-4">
+                    <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div>
+                            <span class="text-xs text-emerald-400 font-bold">PASO 1: ORQUESTACIÓN SIN CÓDIGO</span>
+                            <h4 class="font-bold text-lg">Make.com (Plan Gratuito)</h4>
+                            <p class="text-sm text-slate-400">Conecta tu correo, hojas de cálculo y facturación para que se ejecuten solos en segundo plano.</p>
+                        </div>
+                        <a id="aff_link_1" href="https://www.make.com/en/register" target="_blank" rel="nofollow sponsored" class="shrink-0 bg-white text-slate-950 font-bold px-5 py-2.5 rounded-lg text-sm hover:bg-slate-200 transition">Crear Cuenta Gratis →</a>
+                    </div>
+
+                    <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div>
+                            <span class="text-xs text-blue-400 font-bold">PASO 2: SISTEMA DE GESTIÓN Y PLANTILLAS</span>
+                            <h4 class="font-bold text-lg">Pack Automatizado de Control Financiero</h4>
+                            <p class="text-sm text-slate-400">Dashboard listo para usar que reduce a 5 minutos al mes tu control de gastos e inversión.</p>
+                        </div>
+                        <a id="aff_link_2" href="#LINK_GUMROAD_PROPIO" target="_blank" class="shrink-0 bg-emerald-500 text-slate-950 font-bold px-5 py-2.5 rounded-lg text-sm hover:bg-emerald-400 transition">Descargar Sistema →</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="text-center text-xs text-slate-600 py-6 border-t border-slate-900">
+        <p>© 2026 Auditoría IA Automatizada. Algunos enlaces recomendados pueden generar una comisión sin coste adicional para ti.</p>
+    </footer>
+
+    <script>
+        function calculateROI() {
+            const hours = parseFloat(document.getElementById('hours').value) || 0;
+            const rate = parseFloat(document.getElementById('rate').value) || 0;
+            const yearlyHours = hours * 52;
+            const yearlyCost = yearlyHours * rate;
+            const recoverableHours = Math.round(yearlyHours * 0.85);
+
+            document.getElementById('lostMoney').innerText = yearlyCost.toLocaleString('es-ES') + ' €';
+            document.getElementById('savedHours').innerText = recoverableHours + ' h/año';
+            document.getElementById('results').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
