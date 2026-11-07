@@ -1,29 +1,29 @@
 import os
 import json
 import datetime
-import urllib.request
 import subprocess
+from google import genai
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
+if not GEMINI_API_KEY:
+    raise ValueError("ERROR: No se ha encontrado GEMINI_API_KEY en GitHub Secrets.")
+
+client = genai.Client(api_key=GEMINI_API_KEY.strip())
+
 def call_gemini(prompt):
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
-    headers = {"Content-Type": "application/json"}
-    data = json.dumps({
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"temperature": 0.4}
-    }).encode("utf-8")
-    req = urllib.request.Request(url, data=data, headers=headers, method="POST")
-    with urllib.request.urlopen(req) as response:
-        result = json.loads(response.read().decode("utf-8"))
-        return result["candidates"][0]["content"]["parts"][0]["text"]
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt,
+    )
+    return response.text
 
 def run_autonomous_cycle():
     today = datetime.date.today().isoformat()
     os.makedirs("content/posts", exist_ok=True)
     os.makedirs("output_media", exist_ok=True)
 
-    # 1. Artículo SEO de conversión
+    # 1. Generar artículo SEO
     seo_prompt = (
         "Escribe un artículo práctico en Markdown comparando las 3 mejores herramientas gratuitas "
         "de automatización e IA para ahorrar tiempo y dinero en 2026. Incluye tabla comparativa y llamadas a la acción."
@@ -33,15 +33,16 @@ def run_autonomous_cycle():
     with open(article_path, "w", encoding="utf-8") as f:
         f.write(article_md)
 
-    # 2. Guion + Audio + Vídeo Vertical 1080x1920 (Sin Pexels, 100% FFmpeg nativo)
+    # 2. Generar guion de vídeo corto
     script_prompt = (
-        "Escribe un guion dinámico de 40 segundos (95 palabras) sobre cómo automatizar el control de gastos "
-        "y tareas repetitivas sin saber programar. Devuelve SOLO el texto plano para locutar, sin títulos ni acotaciones."
+        "Escribe un guion dinámico de 35 segundos (85 palabras) sobre cómo automatizar el control de gastos "
+        "y tareas repetitivas sin saber programar. Devuelve SOLO el texto plano para locutar, sin títulos ni asteriscos."
     )
-    script_text = call_gemini(script_prompt).strip().replace('"', '')
+    script_text = call_gemini(script_prompt).strip().replace('"', '').replace('*', '')
     audio_path = f"output_media/voice_{today}.mp3"
     video_path = f"output_media/short_{today}.mp4"
 
+    # 3. Voz neuronal + Vídeo vertical FFmpeg
     subprocess.run([
         "edge-tts", "--voice", "es-ES-AlvaroNeural", "--rate", "+10%",
         "--text", script_text, "--write-media", audio_path
@@ -54,9 +55,9 @@ def run_autonomous_cycle():
         "-crf", "23", "-c:a", "aac", "-b:a", "128k", "-pix_fmt", "yuv420p", "-shortest", video_path
     ], check=True)
 
-    # 3. Registro contable y de producción (ERP)
+    # 4. Registro ERP
     log_entry = {
-        "timestamp": datetime.datetime.utcnow().isoformat(),
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "status": "ACTIVE_SUCCESS",
         "assets": [article_path, video_path],
         "spent_eur": 0.0
