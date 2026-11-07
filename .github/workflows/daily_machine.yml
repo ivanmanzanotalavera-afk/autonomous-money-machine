@@ -1,0 +1,32 @@
+name: Autonomous Money Machine 24/7
+
+on:
+  schedule:
+    - cron: '0 8,20 * * *'
+  workflow_dispatch:
+
+jobs:
+  operate_business:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Instalar motor de voz y vídeo
+        run: |
+          sudo apt-get update && sudo apt-get install -y ffmpeg
+          pip install edge-tts
+      - name: Ejecutar ciclo autónomo
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python autonomous_engine.py
+      - name: Guardar activos generados
+        run: |
+          git config --global user.name 'Autonomous-Operator-Bot'
+          git config --global user.email 'bot@autonomous-machine.local'
+          git add .
+          git commit -m "Auto-ejecución: Nuevos activos generados" || exit 0
+          git push
