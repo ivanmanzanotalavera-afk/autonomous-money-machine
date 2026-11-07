@@ -11,28 +11,25 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
       - name: Instalar motor de IA, voz y vídeo
         run: |
           sudo apt-get update && sudo apt-get install -y ffmpeg
           pip install edge-tts google-genai
-      - name: Ejecutar ciclo autónomo
+
+      - name: Ejecutar ciclo autónomo (Crear artículo y vídeo)
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python autonomous_engine.py
-      - name: Guardar activos generados en el repositorio
-        run: |
-          git config --global user.name 'Autonomous-Operator-Bot'
-          git config --global user.email 'bot@autonomous-machine.local'
-          git add -A
-          git status
-          git diff --staged --quiet || git commit -m "Auto-ejecución: Nuevos activos generados"
-          git pull --rebase origin main
-          git push origin HEAD:main
-      - name: Empaquetar activos para descarga directa (Backup)
+
+      - name: Empaquetar activos para descarga directa
         uses: actions/upload-artifact@v4
         with:
           name: activos-diarios
@@ -40,3 +37,11 @@ jobs:
             content/
             output_media/
             erp_ledger.json
+
+      - name: Guardar activos generados en el repositorio
+        run: |
+          git config --global user.name 'Autonomous-Operator-Bot'
+          git config --global user.email 'bot@autonomous-machine.local'
+          git add -A
+          git diff --staged --quiet || git commit -m "Auto-ejecución: Nuevos activos generados"
+          git push origin HEAD:main
