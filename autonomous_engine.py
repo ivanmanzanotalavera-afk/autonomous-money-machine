@@ -9,45 +9,46 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 if not GEMINI_API_KEY:
     raise ValueError("ERROR: No se ha encontrado GEMINI_API_KEY en GitHub Secrets.")
 
-# Conectamos explícitamente a v1beta donde están los modelos más recientes
 client = genai.Client(
     api_key=GEMINI_API_KEY.strip(),
     http_options={"api_version": "v1beta"}
 )
 
-def get_working_model():
-    # Autodetecta los modelos disponibles en tu cuenta para no fallar nunca por 404
-    available = []
-    for m in client.models.list():
-        actions = getattr(m, "supported_actions", []) or []
-        if "generateContent" in actions or not actions:
-            available.append(m.name)
-    
-    print("Modelos disponibles detectados en tu cuenta:", available)
-    
-    # Priorizamos cualquier variante de Gemini Flash disponible
-    for preferred in ["gemini-3.0-flash", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-flash-latest"]:
-        for name in available:
-            if preferred in name:
-                print(f"Usando modelo autodetectado: {name}")
-                return name
-                
-    # Si tienen otro nombre, elige el primer modelo Gemini disponible
-    for name in available:
-        if "gemini" in name.lower() and "embedding" not in name.lower():
-            print(f"Usando modelo alternativo: {name}")
-            return name
-            
-    return available[0]
-
-ACTIVE_MODEL = get_working_model()
+ACTIVE_MODEL = None
 
 def call_gemini(prompt):
-    response = client.models.generate_content(
-        model=ACTIVE_MODEL,
-        contents=prompt,
-    )
-    return response.text
+    global ACTIVE_MODEL
+    if ACTIVE_MODEL:
+        return client.models.generate_content(model=ACTIVE_MODEL, contents=prompt).text
+
+    # Lista de candidatos en orden de prioridad + todos los modelos Gemini de tu cuenta
+    candidates = [
+        "gemini-flash-latest",
+        "gemini-2.0-flash",
+        "gemini-2.0-flash-lite",
+        "gemini-pro-latest",
+        "gemini-3.0-flash",
+    ]
+    for m in client.models.list():
+        name = m.name.replace("models/", "")
+        if "gemini" in name.lower() and "embedding" not in name.lower() and "2.5" not in name:
+            if name not in candidates:
+                candidates.append(name)
+
+    last_err = None
+    for model_name in candidates:
+        try:
+            print(f"Probando modelo: {model_name}...")
+            resp = client.models.generate_content(model=model_name, contents=prompt)
+            if resp and resp.text:
+                ACTIVE_MODEL = model_name
+                print(f"EXITO con el modelo: {ACTIVE_MODEL}")
+                return resp.text
+        except Exception as e:
+            print(f"Descartado {model_name}: {e}")
+            last_err = e
+
+    raise RuntimeError(f"Ningun modelo funciono. Ultimo error: {last_err}")
 
 def run_autonomous_cycle():
     today = datetime.date.today().isoformat()
