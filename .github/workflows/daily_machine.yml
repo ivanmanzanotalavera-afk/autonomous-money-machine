@@ -23,10 +23,12 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python autonomous_engine.py
-      - name: Guardar activos generados
+      - name: Guardar activos generados en el repositorio
         run: |
           git config --global user.name 'Autonomous-Operator-Bot'
           git config --global user.email 'bot@autonomous-machine.local'
-          git add .
-          git commit -m "Auto-ejecución: Nuevos activos generados" || exit 0
-          git push
+          git add -A
+          git status
+          git diff --staged --quiet || git commit -m "Auto-ejecución: Nuevos activos generados"
+          git pull --rebase origin main
+          git push origin HEAD:main
