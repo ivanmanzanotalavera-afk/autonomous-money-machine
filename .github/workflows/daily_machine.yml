@@ -32,3 +32,11 @@ jobs:
           git diff --staged --quiet || git commit -m "Auto-ejecución: Nuevos activos generados"
           git pull --rebase origin main
           git push origin HEAD:main
+      - name: Empaquetar activos para descarga directa (Backup)
+        uses: actions/upload-artifact@v4
+        with:
+          name: activos-diarios
+          path: |
+            content/
+            output_media/
+            erp_ledger.json
