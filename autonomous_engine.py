@@ -9,11 +9,42 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 if not GEMINI_API_KEY:
     raise ValueError("ERROR: No se ha encontrado GEMINI_API_KEY en GitHub Secrets.")
 
-client = genai.Client(api_key=GEMINI_API_KEY.strip())
+# Conectamos explícitamente a v1beta donde están los modelos más recientes
+client = genai.Client(
+    api_key=GEMINI_API_KEY.strip(),
+    http_options={"api_version": "v1beta"}
+)
+
+def get_working_model():
+    # Autodetecta los modelos disponibles en tu cuenta para no fallar nunca por 404
+    available = []
+    for m in client.models.list():
+        actions = getattr(m, "supported_actions", []) or []
+        if "generateContent" in actions or not actions:
+            available.append(m.name)
+    
+    print("Modelos disponibles detectados en tu cuenta:", available)
+    
+    # Priorizamos cualquier variante de Gemini Flash disponible
+    for preferred in ["gemini-3.0-flash", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-flash-latest"]:
+        for name in available:
+            if preferred in name:
+                print(f"Usando modelo autodetectado: {name}")
+                return name
+                
+    # Si tienen otro nombre, elige el primer modelo Gemini disponible
+    for name in available:
+        if "gemini" in name.lower() and "embedding" not in name.lower():
+            print(f"Usando modelo alternativo: {name}")
+            return name
+            
+    return available[0]
+
+ACTIVE_MODEL = get_working_model()
 
 def call_gemini(prompt):
     response = client.models.generate_content(
-        model="gemini-3.0-flash",
+        model=ACTIVE_MODEL,
         contents=prompt,
     )
     return response.text
@@ -58,6 +89,7 @@ def run_autonomous_cycle():
     # 4. Registro ERP
     log_entry = {
         "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "model_used": ACTIVE_MODEL,
         "status": "ACTIVE_SUCCESS",
         "assets": [article_path, video_path],
         "spent_eur": 0.0
